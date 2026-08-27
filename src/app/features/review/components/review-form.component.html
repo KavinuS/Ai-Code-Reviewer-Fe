@@ -1,0 +1,121 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+  <div class="grid gap-4 sm:grid-cols-2">
+    <div>
+      <label for="language" class="block text-sm font-medium text-slate-900">
+        Language
+      </label>
+      <select
+        id="language"
+        formControlName="language"
+        class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:bg-slate-100"
+      >
+        @for (language of languages(); track language.key) {
+          <option [value]="language.key">{{ language.label }}</option>
+        }
+      </select>
+      @for (message of serverErrorsFor('language'); track message) {
+        <p class="mt-1 text-sm text-red-700">{{ message }}</p>
+      }
+    </div>
+
+    <div>
+      <label for="filename" class="block text-sm font-medium text-slate-900">
+        Filename <span class="font-normal text-slate-500">(optional)</span>
+      </label>
+      <input
+        id="filename"
+        type="text"
+        formControlName="filename"
+        placeholder="UserService.java"
+        autocomplete="off"
+        class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:bg-slate-100"
+        [attr.aria-invalid]="showError('filename') || null"
+        [attr.aria-describedby]="showError('filename') ? 'filename-error' : null"
+      />
+      @if (showError('filename')) {
+        <p id="filename-error" class="mt-1 text-sm text-red-700">
+          Use only letters, digits, dots, dashes and underscores.
+        </p>
+      }
+      @for (message of serverErrorsFor('filename'); track message) {
+        <p class="mt-1 text-sm text-red-700">{{ message }}</p>
+      }
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <label for="instructions" class="block text-sm font-medium text-slate-900">
+      Instructions <span class="font-normal text-slate-500">(optional)</span>
+    </label>
+    <input
+      id="instructions"
+      type="text"
+      formControlName="instructions"
+      placeholder="Focus on security and maintainability."
+      class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:bg-slate-100"
+    />
+    <p class="mt-1 text-xs text-slate-500">
+      Guides what the review emphasises. It cannot change the marking scheme.
+    </p>
+    @for (message of serverErrorsFor('instructions'); track message) {
+      <p class="mt-1 text-sm text-red-700">{{ message }}</p>
+    }
+  </div>
+
+  <div class="mt-4">
+    <div class="flex items-baseline justify-between">
+      <label for="code" class="block text-sm font-medium text-slate-900">
+        Paste your code
+      </label>
+      <span class="text-xs tabular-nums text-slate-500">
+        {{ codeLength | number }} / {{ maxCodeLength | number }}
+      </span>
+    </div>
+    <textarea
+      id="code"
+      formControlName="code"
+      rows="18"
+      spellcheck="false"
+      autocapitalize="off"
+      autocorrect="off"
+      placeholder="public class UserService {&#10;    ...&#10;}"
+      class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm leading-relaxed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:bg-slate-100"
+      [attr.aria-invalid]="showError('code') || null"
+      [attr.aria-describedby]="showError('code') ? 'code-error' : null"
+    ></textarea>
+
+    @if (showError('code')) {
+      <p id="code-error" class="mt-1 text-sm text-red-700">
+        @if (form.controls.code.hasError('required')) {
+          Please paste some code to review.
+        } @else {
+          The code is too long. The limit is {{ maxCodeLength | number }} characters.
+        }
+      </p>
+    }
+    @for (message of serverErrorsFor('code'); track message) {
+      <p class="mt-1 text-sm text-red-700">{{ message }}</p>
+    }
+  </div>
+
+  <div class="mt-5 flex flex-wrap items-center gap-3">
+    <button
+      type="submit"
+      [disabled]="submitting()"
+      class="rounded-lg bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:bg-slate-400"
+    >
+      {{ submitting() ? 'Reviewing...' : 'Review Code' }}
+    </button>
+
+    <button
+      type="button"
+      [disabled]="submitting()"
+      (click)="onClear()"
+      class="rounded-lg border border-slate-300 px-6 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      Clear Code
+    </button>
+
+    <p class="text-xs text-slate-500">Your code is sent to an AI provider for analysis.</p>
+  </div>
+</form>

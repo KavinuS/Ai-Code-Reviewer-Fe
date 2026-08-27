@@ -1,3 +1,49 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+ * Global styles.
+ *
+ * Tailwind supplies the utility layer. The @theme block below adds the few
+ * project-specific design tokens that utilities alone cannot express - the
+ * severity and grade colours the review UI needs from Phase 2 onward.
+ *
+ * Every colour here is paired with a text label in the markup. Colour is never
+ * the only carrier of meaning for a grade or a severity level.
+ */
 
 @import 'tailwindcss';
+
+@theme {
+  /* Issue severity */
+  --color-severity-critical: oklch(0.45 0.19 25);
+  --color-severity-high: oklch(0.58 0.19 35);
+  --color-severity-medium: oklch(0.68 0.15 70);
+  --color-severity-low: oklch(0.62 0.11 240);
+  --color-severity-info: oklch(0.55 0.02 260);
+
+  /* Evaluation grades */
+  --color-grade-a: oklch(0.55 0.14 150);
+  --color-grade-b: oklch(0.6 0.13 165);
+  --color-grade-c: oklch(0.68 0.14 85);
+  --color-grade-d: oklch(0.63 0.16 55);
+  --color-grade-f: oklch(0.52 0.19 25);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+/* Honour the operating-system reduced-motion preference. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

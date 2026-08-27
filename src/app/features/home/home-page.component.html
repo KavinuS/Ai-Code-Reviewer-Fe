@@ -1,0 +1,247 @@
+<!-- Hero -->
+<section class="border-b border-slate-200 bg-linear-to-b from-slate-50 to-white">
+  <div class="mx-auto max-w-4xl px-4 py-16 sm:py-24">
+    <p class="text-sm font-semibold uppercase tracking-wide text-slate-500">
+      AI Code Review Assistant
+    </p>
+
+    <h1 class="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+      Find the problems in your code before someone else does.
+    </h1>
+
+    <p class="mt-5 max-w-2xl text-lg leading-relaxed text-slate-700">
+      Analyze your code with AI to find bugs, security risks, performance issues, and
+      opportunities for improvement.
+    </p>
+
+    <p class="mt-3 max-w-2xl text-base leading-relaxed text-slate-600">
+      The application also evaluates your code using a general 100-point coding marking
+      scheme and explains how your score was calculated &mdash; category by category, with
+      the arithmetic shown.
+    </p>
+
+    <div class="mt-8 flex flex-wrap items-center gap-4">
+      <a
+        routerLink="/review"
+        class="inline-flex items-center rounded-lg bg-slate-900 px-7 py-3 text-base font-semibold text-white transition hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+      >
+        Review Code
+      </a>
+
+      <a
+        href="#scoring"
+        class="inline-flex items-center rounded-lg border border-slate-300 px-7 py-3 text-base font-semibold text-slate-800 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+      >
+        How scoring works
+      </a>
+    </div>
+
+    <!--
+      Backend connection indicator. Each state carries a text label as well as a
+      colour, so status is never communicated by colour alone.
+    -->
+    <div class="mt-8">
+      @switch (connectionState()) {
+        @case ('checking') {
+          <span class="text-sm text-slate-600" role="status">Checking backend...</span>
+        }
+        @case ('online') {
+          <span
+            class="inline-flex items-center gap-2 rounded-full border border-green-300 bg-green-50 px-3 py-1 text-sm font-medium text-green-900"
+            role="status"
+          >
+            <span aria-hidden="true" class="h-2 w-2 rounded-full bg-green-600"></span>
+            Backend connected
+          </span>
+        }
+        @case ('degraded') {
+          <span
+            class="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-900"
+            role="status"
+          >
+            <span aria-hidden="true" class="h-2 w-2 rounded-full bg-amber-500"></span>
+            Backend degraded
+          </span>
+        }
+        @case ('offline') {
+          <span
+            class="inline-flex items-center gap-2 rounded-full border border-red-300 bg-red-50 px-3 py-1 text-sm font-medium text-red-900"
+            role="status"
+          >
+            <span aria-hidden="true" class="h-2 w-2 rounded-full bg-red-600"></span>
+            Backend unreachable
+          </span>
+        }
+      }
+
+      @if (connectionState() === 'offline') {
+        <div class="mt-4 max-w-lg">
+          <app-error-message
+            title="Cannot reach the API"
+            message="Start the Django server with: python manage.py runserver"
+            [retryable]="true"
+            (retry)="checkConnection()"
+          />
+        </div>
+      }
+
+      @if (health(); as status) {
+        <p class="mt-3 text-xs text-slate-500">
+          {{ status.service }} v{{ status.version }} &middot; {{ status.environment }}
+          &middot; database: {{ status.checks.database.status }} &middot; cache:
+          {{ status.checks.cache.status }} ({{ status.checks.cache.backend }})
+        </p>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- What the review looks for -->
+<section class="mx-auto max-w-4xl px-4 py-16">
+  <h2 class="text-2xl font-bold tracking-tight text-slate-900">What the review looks for</h2>
+  <p class="mt-2 text-slate-600">
+    Every finding explains why it is a problem, points at the affected line where it can
+    be determined, and suggests a fix.
+  </p>
+
+  <ul class="mt-8 grid gap-5 sm:grid-cols-2">
+    @for (capability of capabilities; track capability.title) {
+      <li class="rounded-xl border border-slate-200 bg-white p-5">
+        <h3 class="font-semibold text-slate-900">{{ capability.title }}</h3>
+        <p class="mt-1.5 text-sm leading-relaxed text-slate-600">
+          {{ capability.description }}
+        </p>
+      </li>
+    }
+  </ul>
+</section>
+
+<!-- How it works -->
+<section class="border-y border-slate-200 bg-slate-50">
+  <div class="mx-auto max-w-4xl px-4 py-16">
+    <h2 class="text-2xl font-bold tracking-tight text-slate-900">How it works</h2>
+
+    <ol class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      @for (step of steps; track step.title; let index = $index) {
+        <li class="relative rounded-xl border border-slate-200 bg-white p-5">
+          <span
+            class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white"
+            aria-hidden="true"
+          >
+            {{ index + 1 }}
+          </span>
+          <h3 class="mt-3 font-semibold text-slate-900">
+            <span class="sr-only">Step {{ index + 1 }}:</span>{{ step.title }}
+          </h3>
+          <p class="mt-1.5 text-sm leading-relaxed text-slate-600">{{ step.description }}</p>
+        </li>
+      }
+    </ol>
+
+    <p class="mt-8 max-w-2xl text-sm text-slate-600">
+      Your code is sent to the AI provider by the backend only. The API key never reaches
+      the browser, and neither your code nor any AI-suggested code is ever executed.
+    </p>
+  </div>
+</section>
+
+<!-- Scoring -->
+<section id="scoring" class="mx-auto max-w-4xl px-4 py-16">
+  <h2 class="text-2xl font-bold tracking-tight text-slate-900">
+    Transparent, category-based scoring
+  </h2>
+  <p class="mt-2 max-w-2xl text-slate-600">
+    Every review is marked against these categories. The AI proposes the category scores;
+    the backend validates them and calculates the total, grade and band. The number you see
+    is always the sum of its parts.
+  </p>
+
+  @if (criteriaLoading()) {
+    <app-loading label="Loading evaluation criteria..." />
+  } @else if (criteriaError(); as error) {
+    <div class="mt-4">
+      <app-error-message
+        title="Could not load the evaluation criteria"
+        [message]="error.message"
+        [retryable]="true"
+        (retry)="loadCriteria()"
+      />
+    </div>
+  } @else if (markingScheme(); as scheme) {
+    <div class="mt-6 overflow-x-auto">
+      <table class="w-full border-collapse text-left text-sm">
+        <caption class="sr-only">Evaluation categories and their maximum points</caption>
+        <thead>
+          <tr class="border-b border-slate-300 text-slate-700">
+            <th scope="col" class="py-2 pr-4 font-semibold">Category</th>
+            <th scope="col" class="py-2 text-right font-semibold">Maximum points</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (category of scheme.categories; track category.key) {
+            <tr class="border-b border-slate-200 align-top">
+              <th scope="row" class="py-3 pr-4 font-medium text-slate-900">
+                {{ category.name }}
+                <span class="mt-1 block text-xs font-normal text-slate-600">
+                  {{ category.description }}
+                </span>
+              </th>
+              <td class="py-3 text-right font-semibold tabular-nums text-slate-900">
+                {{ category.maxScore }}
+              </td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr>
+            <th scope="row" class="py-3 pr-4 text-right font-bold text-slate-900">Total</th>
+            <td class="py-3 text-right font-bold tabular-nums text-slate-900">
+              {{ scheme.maxScore }}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <h3 class="mt-12 text-lg font-semibold text-slate-900">Grade bands</h3>
+    <ul class="mt-4 grid gap-3 sm:grid-cols-2">
+      @for (band of scheme.gradeBands; track band.grade) {
+        <li class="rounded-lg border border-slate-200 p-4">
+          <p class="flex flex-wrap items-baseline gap-x-3">
+            <span class="font-mono text-lg font-bold text-slate-900">{{ band.grade }}</span>
+            <span class="tabular-nums text-sm text-slate-700">
+              {{ band.minScore }}&ndash;{{ band.maxScore }}
+            </span>
+            <span class="text-sm font-semibold text-slate-900">{{ band.band }}</span>
+          </p>
+          <p class="mt-1 text-sm text-slate-600">{{ band.meaning }}</p>
+        </li>
+      }
+    </ul>
+
+    <div class="mt-10 rounded-xl border border-slate-200 bg-slate-50 p-5">
+      <h3 class="font-semibold text-slate-900">About the score</h3>
+      <p class="mt-2 text-sm leading-relaxed text-slate-600">
+        This evaluation is an aid for improving code, not a measure of a developer's
+        ability. It reflects only the code submitted, without the context, requirements or
+        constraints behind it. A low score on a deliberate prototype means very little; a
+        high score does not prove the code is correct. Treat it as structured feedback and
+        apply your own judgement.
+      </p>
+      <p class="mt-3 text-xs text-slate-500">
+        Marking scheme version {{ scheme.version }} &middot;
+        {{ scheme.languages.length }} languages supported
+      </p>
+    </div>
+  }
+
+  <div class="mt-12 flex flex-wrap items-center gap-4 border-t border-slate-200 pt-10">
+    <a
+      routerLink="/review"
+      class="inline-flex items-center rounded-lg bg-slate-900 px-7 py-3 text-base font-semibold text-white transition hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+    >
+      Review Code
+    </a>
+    <span class="text-sm text-slate-600">No sign-up. Paste code and get a review.</span>
+  </div>
+</section>
