@@ -1,0 +1,126 @@
+/*
+ * Landing page background video.
+ *
+ * The video sits in a fixed layer behind the whole landing page, so it reads as
+ * the page's ground rather than a hero banner. Everything that has to stay
+ * readable is handled by two devices:
+ *
+ *   1. a scrim over the video, weighted dark on the left where the hero text
+ *      sits and lighter on the right where the artwork can show through;
+ *   2. a near-opaque panel behind every section below the hero, so body copy is
+ *      never set directly on moving imagery.
+ *
+ * The panel uses flat alpha rather than backdrop-filter: a blur across most of
+ * the page, on top of a looping video, is a real cost on weaker machines for an
+ * effect nobody asked for.
+ */
+
+.landing {
+  position: relative;
+}
+
+.landing-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--color-bg);
+  pointer-events: none;
+}
+
+.landing-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* Fades in once the first frame is decoded, so the page never flashes a
+     black rectangle before playback starts. */
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+
+.landing-video.is-ready {
+  opacity: 0.55;
+}
+
+.landing-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      100deg,
+      color-mix(in srgb, var(--color-bg) 94%, transparent) 0%,
+      color-mix(in srgb, var(--color-bg) 82%, transparent) 38%,
+      color-mix(in srgb, var(--color-bg) 55%, transparent) 72%,
+      color-mix(in srgb, var(--color-bg) 40%, transparent) 100%
+    );
+}
+
+.landing-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* The hero is the one place the video shows at full strength. */
+.landing-hero {
+  padding: clamp(48px, 8vw, 104px) clamp(16px, 3vw, 40px) clamp(40px, 6vw, 72px);
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Sections below the hero sit on their own ground. 93% keeps the video present
+   as a faint texture without ever competing with text. */
+.landing-panel {
+  background: color-mix(in srgb, var(--color-bg) 93%, transparent);
+  border-top: 2px solid var(--color-divider);
+}
+
+.landing-panel-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 3vw, 40px);
+}
+
+/* Playback control. WCAG 2.2.2: motion that starts automatically and runs for
+   more than five seconds needs a way to stop it. Kept to the design system's
+   monospace caption voice so it reads as a footnote, not a widget. */
+.landing-motion-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 32px;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+}
+
+.landing-motion-toggle:hover {
+  color: var(--color-accent);
+}
+
+.landing-motion-toggle .glyph {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  background: currentColor;
+}
+
+.landing-motion-toggle .glyph.is-playing {
+  /* Two bars: the pause affordance. */
+  background: none;
+  box-shadow:
+    inset 2px 0 0 currentColor,
+    inset -2px 0 0 currentColor;
+}
+
+/* Nothing here should move for a reader who asked for stillness. The video is
+   also not rendered at all in that case - this is belt and braces. */
+@media (prefers-reduced-motion: reduce) {
+  .landing-video {
+    display: none;
+  }
+}

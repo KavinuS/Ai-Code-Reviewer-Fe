@@ -1,5 +1,33 @@
+<div class="landing">
+
+  <!-- Background video. Decorative: aria-hidden, and never the carrier of
+       information. Rendered only when motion is welcome. -->
+  <div class="landing-bg" aria-hidden="true">
+    @if (videoEnabled()) {
+      <video
+        #bgVideo
+        class="landing-video"
+        [class.is-ready]="videoReady()"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="auto"
+        tabindex="-1"
+        (loadeddata)="onVideoReady()"
+        (play)="videoPaused.set(false)"
+        (pause)="videoPaused.set(true)"
+      >
+        <source src="neural-network-loop.mp4" type="video/mp4" />
+      </video>
+    }
+    <div class="landing-scrim"></div>
+  </div>
+
+  <div class="landing-content">
+
 <!-- Hero -->
-<section style="padding:clamp(48px,8vw,104px) clamp(16px,3vw,40px) clamp(40px,6vw,72px); max-width:1400px; width:100%; margin:0 auto">
+<section class="landing-hero">
   <h6 style="color:var(--color-accent); margin-bottom:16px">AI code review</h6>
 
   <h1 style="font-size:clamp(40px,7vw,72px); margin:0; max-width:16ch">
@@ -20,11 +48,18 @@
     <a routerLink="/review" class="btn btn-primary btn-lg">Review code</a>
     <a href="#scoring" class="btn btn-secondary btn-lg">How scoring works</a>
   </div>
+
+  @if (videoEnabled()) {
+    <button type="button" class="landing-motion-toggle" (click)="toggleMotion()">
+      <span class="glyph" [class.is-playing]="!videoPaused()" aria-hidden="true"></span>
+      {{ videoPaused() ? 'Play background' : 'Pause background' }}
+    </button>
+  }
 </section>
 
 <!-- What the review looks for -->
-<section style="border-top:2px solid var(--color-divider)">
-  <div style="max-width:1400px; margin:0 auto; padding:0 clamp(16px,3vw,40px)">
+<section class="landing-panel">
+  <div class="landing-panel-inner">
     <div style="padding:clamp(32px,4vw,56px) 0 clamp(20px,2vw,28px)">
       <h6 class="text-muted" style="margin:0 0 8px">What it finds</h6>
       <h2 style="font-size:clamp(26px,3.4vw,36px); margin:0; max-width:24ch">
@@ -47,8 +82,8 @@
 </section>
 
 <!-- How it works -->
-<section style="border-top:2px solid var(--color-divider)">
-  <div style="max-width:1400px; margin:0 auto; padding:clamp(32px,4vw,56px) clamp(16px,3vw,40px)">
+<section class="landing-panel">
+  <div class="landing-panel-inner" style="padding-block:clamp(32px,4vw,56px)">
     <h6 class="text-muted" style="margin:0 0 8px">How it works</h6>
     <h2 style="font-size:clamp(26px,3.4vw,36px); margin:0 0 32px; max-width:24ch">
       Four steps, no sign-up.
@@ -76,8 +111,8 @@
 </section>
 
 <!-- Scoring -->
-<section id="scoring" style="border-top:2px solid var(--color-divider)">
-  <div style="max-width:1400px; margin:0 auto; padding:clamp(32px,4vw,56px) clamp(16px,3vw,40px)">
+<section id="scoring" class="landing-panel">
+  <div class="landing-panel-inner" style="padding-block:clamp(32px,4vw,56px)">
     <h6 style="color:var(--color-accent); margin:0 0 8px">Marking scheme</h6>
     <h2 style="font-size:clamp(26px,3.4vw,36px); margin:0 0 12px; max-width:24ch">
       The score is the sum of its parts.
@@ -177,3 +212,6 @@
     </div>
   </div>
 </section>
+
+  </div>
+</div>

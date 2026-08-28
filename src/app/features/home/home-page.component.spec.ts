@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { vi } from 'vitest';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -37,7 +38,20 @@ describe('HomePageComponent', () => {
     httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => httpMock.verify());
+  afterEach(() => {
+    httpMock.verify();
+    vi.unstubAllGlobals();
+  });
+
+  /** Force the reduced-motion media query to a known answer. */
+  function stubReducedMotion(reduce: boolean) {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: reduce && query.includes('prefers-reduced-motion'),
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }));
+  }
 
   it('renders the marking scheme fetched from the API', async () => {
     const fixture = TestBed.createComponent(HomePageComponent);
@@ -78,5 +92,61 @@ describe('HomePageComponent', () => {
     const element = fixture.nativeElement as HTMLElement;
     const cta = element.querySelector('a[href="/review"]');
     expect(cta?.textContent?.trim()).toBe('Review code');
+  });
+
+  describe('background video', () => {
+    function render() {
+      const fixture = TestBed.createComponent(HomePageComponent);
+      fixture.detectChanges();
+      httpMock.expectOne(`${environment.apiBaseUrl}/evaluation-criteria/`).flush(markingScheme);
+      fixture.detectChanges();
+      return fixture;
+    }
+
+    it('plays the background video when motion is welcome', async () => {
+      stubReducedMotion(false);
+      const fixture = render();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      expect(fixture.componentInstance.videoEnabled()).toBe(true);
+      expect(element.querySelector('video')).toBeTruthy();
+      expect(element.querySelector('source')?.getAttribute('src')).toBe(
+        'neural-network-loop.mp4',
+      );
+      // A background video must never grab audio or the tab's focus order.
+      const video = element.querySelector('video')!;
+      expect(video.hasAttribute('muted')).toBe(true);
+      expect(video.hasAttribute('loop')).toBe(true);
+      expect(video.getAttribute('tabindex')).toBe('-1');
+    });
+
+    it('offers a control to stop the motion', async () => {
+      stubReducedMotion(false);
+      const fixture = render();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const toggle = (fixture.nativeElement as HTMLElement).querySelector(
+        '.landing-motion-toggle',
+      );
+      expect(toggle?.textContent?.trim()).toBe('Pause background');
+    });
+
+    it('renders no video at all under prefers-reduced-motion', async () => {
+      stubReducedMotion(true);
+      const fixture = render();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      const element = fixture.nativeElement as HTMLElement;
+      expect(fixture.componentInstance.videoEnabled()).toBe(false);
+      // Not merely paused - never requested, so the 2.6 MB is never fetched.
+      expect(element.querySelector('video')).toBeNull();
+      expect(element.querySelector('.landing-motion-toggle')).toBeNull();
+      // The page itself still renders in full.
+      expect(element.textContent).toContain('Correctness and Functionality');
+    });
   });
 });
