@@ -1,31 +1,18 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient, withFetch } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { HomePageComponent } from './home-page.component';
 import { environment } from '../../../environments/environment';
 
 /**
- * These tests cover the two states that matter most on this page: the marking
- * scheme rendering correctly from backend data, and a dead backend producing a
- * helpful message rather than a blank screen.
+ * The landing page's job is to render the marking scheme from backend data
+ * rather than restating it, so that is what is asserted here - plus the error
+ * path, which must explain itself rather than leave a blank section.
  */
 describe('HomePageComponent', () => {
   let httpMock: HttpTestingController;
-
-  const healthResponse = {
-    status: 'ok',
-    service: 'ai-code-review-assistant',
-    version: '0.1.0',
-    environment: 'test',
-    markingSchemeVersion: 'v1',
-    time: '2026-01-01T00:00:00Z',
-    checks: {
-      database: { status: 'ok', engine: 'sqlite' },
-      cache: { status: 'ok', backend: 'locmem' },
-    },
-  };
 
   const markingScheme = {
     version: 'v1',
@@ -44,81 +31,52 @@ describe('HomePageComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [HomePageComponent],
-      providers: [
-        provideRouter([]),
-        provideHttpClient(withFetch()),
-        provideHttpClientTesting(),
-      ],
+      providers: [provideRouter([]), provideHttpClient(withFetch()), provideHttpClientTesting()],
     }).compileComponents();
 
     httpMock = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => {
-    httpMock.verify();
-  });
+  afterEach(() => httpMock.verify());
 
-  function expectRequests() {
-    return {
-      health: httpMock.expectOne(`${environment.apiBaseUrl}/health/`),
-      criteria: httpMock.expectOne(`${environment.apiBaseUrl}/evaluation-criteria/`),
-    };
-  }
-
-  it('shows the backend as connected and renders the marking scheme', async () => {
+  it('renders the marking scheme fetched from the API', async () => {
     const fixture = TestBed.createComponent(HomePageComponent);
     fixture.detectChanges();
 
-    const requests = expectRequests();
-    requests.health.flush(healthResponse);
-    requests.criteria.flush(markingScheme);
+    httpMock.expectOne(`${environment.apiBaseUrl}/evaluation-criteria/`).flush(markingScheme);
+    await fixture.whenStable();
+    fixture.detectChanges();
 
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Correctness and Functionality');
+    expect(text).toContain('Excellent');
+    expect(text).toContain('scheme v1');
+  });
+
+  it('explains a failure to load the criteria instead of rendering nothing', async () => {
+    const fixture = TestBed.createComponent(HomePageComponent);
+    fixture.detectChanges();
+
+    httpMock
+      .expectOne(`${environment.apiBaseUrl}/evaluation-criteria/`)
+      .error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('Could not load the evaluation criteria');
+    expect(text).toContain('Could not reach the server');
+  });
+
+  it('links to the review page from the hero', async () => {
+    const fixture = TestBed.createComponent(HomePageComponent);
+    fixture.detectChanges();
+    httpMock.expectOne(`${environment.apiBaseUrl}/evaluation-criteria/`).flush(markingScheme);
     await fixture.whenStable();
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
-    expect(fixture.componentInstance.connectionState()).toBe('online');
-    expect(element.textContent).toContain('Backend connected');
-    expect(element.textContent).toContain('Correctness and Functionality');
-    expect(element.textContent).toContain('Marking scheme version v1');
-  });
-
-  it('reports the backend as unreachable instead of failing silently', async () => {
-    const fixture = TestBed.createComponent(HomePageComponent);
-    fixture.detectChanges();
-
-    const requests = expectRequests();
-    requests.health.error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
-    requests.criteria.error(new ProgressEvent('error'), { status: 0, statusText: 'Unknown Error' });
-
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const element = fixture.nativeElement as HTMLElement;
-    expect(fixture.componentInstance.connectionState()).toBe('offline');
-    expect(element.textContent).toContain('Backend unreachable');
-    expect(element.textContent).toContain('Could not reach the server');
-  });
-
-  it('treats a degraded backend as reachable but unhealthy', async () => {
-    const fixture = TestBed.createComponent(HomePageComponent);
-    fixture.detectChanges();
-
-    const requests = expectRequests();
-    requests.health.flush({
-      ...healthResponse,
-      status: 'degraded',
-      checks: {
-        database: { status: 'ok', engine: 'sqlite' },
-        cache: { status: 'unavailable', backend: 'redis' },
-      },
-    });
-    requests.criteria.flush(markingScheme);
-
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    expect(fixture.componentInstance.connectionState()).toBe('degraded');
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Backend degraded');
+    const cta = element.querySelector('a[href="/review"]');
+    expect(cta?.textContent?.trim()).toBe('Review code');
   });
 });

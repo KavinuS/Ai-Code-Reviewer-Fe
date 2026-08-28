@@ -1,24 +1,21 @@
-<section class="mx-auto max-w-4xl px-4 py-10">
-  <header>
-    <h1 class="text-3xl font-bold tracking-tight text-slate-900">AI Code Review</h1>
-    <p class="mt-2 text-slate-600">
-      Paste your code below. The review reports bugs, security risks, performance
-      problems and quality issues, and scores the code out of 100.
-    </p>
-  </header>
+<div class="split">
 
-  @if (criteriaError(); as error) {
-    <div class="mt-6">
+  <!-- ── Left: submission ─────────────────────────────────────── -->
+  <div class="split-left">
+    <div>
+      <h6 style="color:var(--color-accent); margin-bottom:8px">New review</h6>
+      <h3 style="font-size:26px; margin:0">Paste your code.</h3>
+    </div>
+
+    @if (criteriaError(); as error) {
       <app-error-message
         title="Could not load the language list"
         [message]="error.message"
         [retryable]="true"
         (retry)="loadLanguages()"
       />
-    </div>
-  }
+    }
 
-  <div class="mt-8 rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
     <app-review-form
       [languages]="languages()"
       [submitting]="submitting()"
@@ -27,32 +24,74 @@
     />
   </div>
 
-  <div class="mt-8">
+  <!-- ── Right: result ────────────────────────────────────────── -->
+  <div class="split-right">
+
     @if (submitting()) {
-      <div class="rounded-xl border border-slate-200 bg-white p-6">
-        <app-loading label="Reviewing your code. This usually takes 10-30 seconds..." />
-        <p class="text-sm text-slate-500">
-          The code is being analysed and scored against the marking scheme.
+      <div>
+        <h6 style="color:var(--color-accent); margin-bottom:8px">Result</h6>
+        <h3 style="font-size:26px; margin:0 0 6px">Reviewing&hellip;</h3>
+        <p class="text-muted" style="font-size:13.5px; max-width:46ch">
+          The code is being analysed and scored against the marking scheme. This usually
+          takes 10&ndash;30 seconds.
         </p>
       </div>
+
+      <!-- Skeleton mirroring the finished layout, so the panel does not jump on arrival. -->
+      <div class="stack" style="gap:10px" aria-hidden="true">
+        @for (row of skeletonRows; track row) {
+          <div>
+            <div class="meter"><span style="width:0"></span></div>
+          </div>
+        }
+      </div>
+      <app-loading label="Waiting for the AI provider..." />
+
     } @else if (showErrorBanner()) {
+      <div>
+        <h6 style="color:var(--color-accent); margin-bottom:8px">Result</h6>
+        <h3 style="font-size:26px; margin:0 0 12px">The review could not be completed.</h3>
+      </div>
       <app-error-message
-        title="The review could not be completed"
+        title="Review failed"
         [message]="error()!.message"
         [retryable]="true"
         (retry)="retry()"
       />
+
     } @else if (result(); as reviewResult) {
       <app-review-result [result]="reviewResult" />
+
+    } @else {
+      <!-- Empty state: nothing submitted yet. -->
+      <div>
+        <h6 class="text-muted" style="margin-bottom:8px">Result</h6>
+        <h3 style="font-size:26px; margin:0 0 6px">No review yet.</h3>
+        <p class="text-muted" style="font-size:13.5px; max-width:46ch; margin:0">
+          Paste a file on the left and run a review. You will get a score out of 100, a
+          category breakdown, and every issue found with an explanation and a suggested fix.
+        </p>
+      </div>
+
+      @if (markingScheme(); as scheme) {
+        <div>
+          <h6 class="text-muted">Marked against</h6>
+          <div class="stack" style="gap:10px; margin-top:12px">
+            @for (category of scheme.categories; track category.key) {
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:13px">
+                  <span>{{ category.name }}</span>
+                  <span class="mono text-muted">/ {{ category.maxScore }}</span>
+                </div>
+                <div class="meter"><span style="width:0"></span></div>
+              </div>
+            }
+          </div>
+          <p class="mono text-muted" style="font-size:11.5px; margin-top:12px">
+            {{ scheme.maxScore }} points total &middot; scheme {{ scheme.version }}
+          </p>
+        </div>
+      }
     }
   </div>
-
-  <p class="mt-10 text-sm">
-    <a
-      routerLink="/"
-      class="font-medium text-slate-700 underline underline-offset-4 hover:text-slate-900"
-    >
-      Back to home
-    </a>
-  </p>
-</section>
+</div>

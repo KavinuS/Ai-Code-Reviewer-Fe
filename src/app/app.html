@@ -1,50 +1,26 @@
-<a
-  href="#main-content"
-  class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-slate-900 focus:px-4 focus:py-2 focus:text-white"
->
-  Skip to main content
-</a>
+<a href="#main-content" class="sr-only skip-link">Skip to main content</a>
 
-<div class="flex min-h-screen flex-col bg-white text-slate-900">
-  <header class="border-b border-slate-200">
-    <nav
-      class="mx-auto flex max-w-4xl items-center justify-between gap-4 px-4 py-4"
-      aria-label="Main"
-    >
-      <a routerLink="/" class="text-base font-bold tracking-tight text-slate-900">
-        AI Code Review Assistant
-      </a>
-      <ul class="flex items-center gap-5 text-sm">
-        <li>
-          <a
-            routerLink="/"
-            routerLinkActive="font-semibold underline underline-offset-4"
-            [routerLinkActiveOptions]="{ exact: true }"
-            class="text-slate-700 hover:text-slate-900"
-          >
-            Home
-          </a>
-        </li>
-        <li>
-          <a
-            routerLink="/review"
-            routerLinkActive="font-semibold underline underline-offset-4"
-            class="text-slate-700 hover:text-slate-900"
-          >
-            Review
-          </a>
-        </li>
-      </ul>
-    </nav>
-  </header>
+<div class="shell">
+  <nav class="nav" aria-label="Main">
+    <a routerLink="/" class="nav-brand">CODEREVIEW<span style="color:var(--color-accent)">/AI</span></a>
 
-  <main id="main-content" class="flex-1">
+    <div class="nav-tabs">
+      <a routerLink="/review" routerLinkActive="is-active" class="nav-tab">Review</a>
+      <a routerLink="/history" routerLinkActive="is-active" class="nav-tab">History</a>
+      <a routerLink="/dashboard" routerLinkActive="is-active" class="nav-tab">Dashboard</a>
+    </div>
+
+    <app-backend-status />
+  </nav>
+
+  <main id="main-content" style="flex:1; display:flex; flex-direction:column; min-height:0">
     <router-outlet />
   </main>
 
-  <footer class="border-t border-slate-200 py-6">
-    <p class="mx-auto max-w-4xl px-4 text-xs text-slate-500">
+  <div style="border-top:2px solid var(--color-divider); padding:16px clamp(16px,3vw,40px)">
+    <p class="text-muted" style="font-size:12px; margin:0">
       Scores are a structured code-quality aid, not a judgement of developer ability.
+      &middot; <a routerLink="/">Landing page</a>
     </p>
-  </footer>
+  </div>
 </div>

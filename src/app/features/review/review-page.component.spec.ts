@@ -106,12 +106,14 @@ describe('ReviewPageComponent', () => {
     fixture.detectChanges();
 
     const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
-    expect(text).toContain('Overall score 78 / 100');
-    expect(text).toContain('Grade');
+    expect(text).toContain('78');
+    expect(text).toContain('/ 100 · grade C');
     expect(text).toContain('Good');
     expect(text).toContain('Possible null reference');
-    expect(text).toContain('Line 24');
+    expect(text).toContain('line 24 · confirmed');
     expect(text).toContain('21 / 25');
+    // Headline is derived from the real issue counts, not from the AI.
+    expect(text).toContain('One issue, one high.');
   });
 
   it('shows how the score was calculated', async () => {
@@ -135,9 +137,9 @@ describe('ReviewPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).textContent).toContain(
-      'No specific issues were reported',
-    );
+    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    expect(text).toContain('No issues reported.');
+    expect(text).toContain('No issues found.');
   });
 
   it('shows a friendly message when the AI service is unavailable', async () => {
@@ -207,15 +209,12 @@ describe('ReviewPageComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
+    // A HIGH-severity finding shows its snippet without a click.
     const element = fixture.nativeElement as HTMLElement;
-    const toggle = Array.from(element.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('View suggested code'),
-    );
-    toggle?.click();
-    fixture.detectChanges();
+    const block = element.querySelector('pre.code-block');
 
     // The payload appears as visible text, and no element was created from it.
-    expect(element.querySelector('pre code')?.textContent).toContain('<img src=x');
-    expect(element.querySelector('pre img')).toBeNull();
+    expect(block?.textContent).toContain('<img src=x');
+    expect(element.querySelector('img')).toBeNull();
   });
 });

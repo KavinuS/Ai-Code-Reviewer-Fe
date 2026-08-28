@@ -1,5 +1,9 @@
 /**
- * The headline result: score ring, grade, band and the written summary.
+ * The result header: a one-line verdict, the written summary, and the score.
+ *
+ * The design opens the result panel with a sentence that states the finding
+ * ("Four issues, one critical."), not a label. That headline is derived from
+ * the real issue counts by the parent, so it is always true of what follows.
  */
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
@@ -11,49 +15,26 @@ import { ScoreComponent } from './score.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ScoreComponent],
   template: `
-    <section class="rounded-xl border border-slate-200 bg-white p-6">
-      <div class="flex flex-col gap-6 sm:flex-row sm:items-center">
-        <app-score
-          [score]="evaluation().totalScore"
-          [maxScore]="evaluation().maxScore"
-          [grade]="evaluation().grade"
-          [band]="evaluation().band"
-        />
-
-        <div class="flex-1">
-          <h2 class="text-xl font-bold text-slate-900">
-            Overall score {{ evaluation().totalScore }} / {{ evaluation().maxScore }}
-          </h2>
-
-          <dl class="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm">
-            <div class="flex gap-1.5">
-              <dt class="text-slate-500">Grade:</dt>
-              <dd class="font-semibold text-slate-900">{{ evaluation().grade }}</dd>
-            </div>
-            <div class="flex gap-1.5">
-              <dt class="text-slate-500">Band:</dt>
-              <dd class="font-semibold text-slate-900">{{ evaluation().band }}</dd>
-            </div>
-          </dl>
-
-          <p class="mt-2 text-sm text-slate-600">{{ evaluation().bandMeaning }}</p>
-
-          <h3 class="mt-5 text-sm font-semibold uppercase tracking-wide text-slate-500">
-            Summary
-          </h3>
-          <p class="mt-1 text-slate-700">{{ summary() }}</p>
-        </div>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px">
+      <div>
+        <h6 style="color:var(--color-accent); margin-bottom:8px">Result</h6>
+        <h3 style="font-size:26px; margin:0 0 6px">{{ headline() }}</h3>
+        <p class="text-muted" style="font-size:13.5px; max-width:46ch; margin:0">
+          {{ summary() }}
+        </p>
       </div>
 
-      <p class="mt-6 border-t border-slate-200 pt-4 text-xs text-slate-500">
-        This score is a structured code-quality aid, not a measure of developer
-        ability. It reflects only the code submitted, without the requirements,
-        constraints or context behind it.
-      </p>
-    </section>
+      <app-score
+        [score]="evaluation().totalScore"
+        [maxScore]="evaluation().maxScore"
+        [grade]="evaluation().grade"
+        [band]="evaluation().band"
+      />
+    </div>
   `,
 })
 export class EvaluationSummaryComponent {
   readonly evaluation = input.required<Evaluation>();
   readonly summary = input.required<string>();
+  readonly headline = input.required<string>();
 }

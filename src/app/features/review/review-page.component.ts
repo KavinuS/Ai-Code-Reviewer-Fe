@@ -7,11 +7,10 @@
  * by the history detail page in Phase 5.
  */
 import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 
 import { ApiClientService } from '../../core/api/api-client.service';
 import { ApiError } from '../../core/api/api-error';
-import { SupportedLanguage } from '../../core/models/marking-scheme.model';
+import { MarkingScheme, SupportedLanguage } from '../../core/models/marking-scheme.model';
 import { ReviewRequest, ReviewResult } from '../../core/models/review.model';
 import { EvaluationCriteriaService } from '../../core/services/evaluation-criteria.service';
 import { ReviewService } from '../../core/services/review.service';
@@ -24,7 +23,6 @@ import { ReviewResultComponent } from './components/review-result.component';
   selector: 'app-review-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
-    RouterLink,
     ReviewFormComponent,
     ReviewResultComponent,
     LoadingComponent,
@@ -38,7 +36,11 @@ export class ReviewPageComponent implements OnInit {
   private readonly api = inject(ApiClientService);
 
   readonly languages = signal<readonly SupportedLanguage[]>([]);
+  readonly markingScheme = signal<MarkingScheme | null>(null);
   readonly criteriaError = signal<ApiError | null>(null);
+
+  /** Rows for the loading skeleton; length matches the seven scheme categories. */
+  protected readonly skeletonRows = [1, 2, 3, 4, 5, 6, 7];
 
   readonly submitting = signal(false);
   readonly result = signal<ReviewResult | null>(null);
@@ -57,7 +59,10 @@ export class ReviewPageComponent implements OnInit {
   loadLanguages(): void {
     this.criteriaError.set(null);
     this.criteriaService.getMarkingScheme().subscribe({
-      next: (scheme) => this.languages.set(scheme.languages),
+      next: (scheme) => {
+        this.languages.set(scheme.languages);
+        this.markingScheme.set(scheme);
+      },
       error: (error: ApiError) => this.criteriaError.set(error),
     });
   }

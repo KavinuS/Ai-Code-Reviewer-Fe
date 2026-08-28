@@ -1,9 +1,9 @@
 /**
- * Displays a user-facing error with an optional retry action.
+ * A user-facing error with an optional retry action.
  *
- * It renders only the pre-mapped ApiError message, never a raw server payload.
- * The leading "Error" text label is deliberate: the red border alone must not
- * be the only signal that something failed.
+ * Renders only the pre-mapped ApiError message, never a raw server payload.
+ * The "Error" heading is deliberate: the accent rule alone must not be the only
+ * signal that something failed.
  */
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
@@ -13,17 +13,13 @@ import { ChangeDetectionStrategy, Component, input, output } from '@angular/core
   template: `
     <div
       role="alert"
-      class="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-900"
+      style="border:1px solid var(--color-divider); border-left:2px solid var(--color-accent); padding:14px 16px; background:var(--color-surface)"
     >
-      <p class="font-semibold">{{ title() }}</p>
-      <p class="mt-1">{{ message() }}</p>
+      <strong style="font-size:14px; color:var(--color-accent-800)">{{ title() }}</strong>
+      <p style="font-size:13px; margin:6px 0 0">{{ message() }}</p>
 
       @if (retryable()) {
-        <button
-          type="button"
-          class="mt-3 rounded-md border border-red-400 px-3 py-1.5 font-medium text-red-900 hover:bg-red-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-700"
-          (click)="retry.emit()"
-        >
+        <button type="button" class="btn btn-secondary" style="margin-top:12px" (click)="retry.emit()">
           Try again
         </button>
       }

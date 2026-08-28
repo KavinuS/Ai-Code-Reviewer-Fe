@@ -1,11 +1,13 @@
 /**
- * The full category-by-category breakdown, plus how the total was calculated.
+ * The category breakdown, and the arithmetic behind the total.
  *
- * The calculation explanation comes from the backend rather than being
- * reconstructed here, so the number the user sees and the sentence explaining
- * it always come from the same source.
+ * The design prints the sum as a single monospace line under the meters
+ * ("18 + 9 + 12 + 13 + 7 + 3 = 62 · scheme v1.4"). That line is reproduced here
+ * from real values, because the product claim is that the score is the sum of
+ * its parts - so the sum should be legible at a glance, not hidden behind a
+ * disclosure.
  */
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
 import { Evaluation } from '../../../core/models/review.model';
 import { EvaluationCategoryCardComponent } from './evaluation-category-card.component';
@@ -15,41 +17,57 @@ import { EvaluationCategoryCardComponent } from './evaluation-category-card.comp
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [EvaluationCategoryCardComponent],
   template: `
-    <section>
-      <h3 class="text-lg font-semibold text-slate-900">Score breakdown</h3>
+    <div>
+      <div style="display:flex; align-items:baseline; gap:12px">
+        <h6 class="text-muted" style="margin:0; margin-right:auto">Score breakdown</h6>
+        <button type="button" class="btn btn-ghost" (click)="toggleDetail()">
+          {{ detailed() ? 'Hide feedback' : 'Show feedback' }}
+        </button>
+      </div>
 
-      <div class="mt-4 grid gap-4 sm:grid-cols-2">
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:12px">
         @for (category of evaluation().categories; track category.key) {
-          <app-evaluation-category-card [category]="category" />
+          <app-evaluation-category-card [category]="category" [detailed]="detailed()" />
         }
       </div>
 
-      <details class="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <summary class="cursor-pointer text-sm font-semibold text-slate-900">
-          How this score was calculated
-        </summary>
-        <p class="mt-3 text-sm text-slate-700">
-          {{ evaluation().calculationExplanation }}
-        </p>
+      <p class="mono text-muted" style="font-size:11.5px; margin-top:12px">
+        {{ sumLine() }}
+      </p>
 
-        @if (evaluation().adjustments.length) {
-          <h4 class="mt-4 text-sm font-semibold text-slate-900">
-            Corrections applied to the AI's proposed scores
-          </h4>
-          <ul class="mt-1 list-disc space-y-1 pl-5 text-sm text-slate-700">
+      @if (evaluation().adjustments.length) {
+        <div style="border-left:2px solid var(--color-accent); padding:8px 12px; margin-top:12px">
+          <h6 class="text-muted" style="margin:0 0 6px">Corrections applied by the backend</h6>
+          <ul style="margin:0; padding-left:16px; font-size:12.5px">
             @for (adjustment of evaluation().adjustments; track adjustment) {
               <li>{{ adjustment }}</li>
             }
           </ul>
-        }
+        </div>
+      }
 
-        <p class="mt-4 text-xs text-slate-500">
-          Marking scheme version {{ evaluation().markingSchemeVersion }}
+      <details style="margin-top:12px">
+        <summary style="cursor:pointer; font-size:12.5px">How this score was calculated</summary>
+        <p class="text-muted" style="font-size:12.5px; margin:8px 0 0">
+          {{ evaluation().calculationExplanation }}
         </p>
       </details>
-    </section>
+    </div>
   `,
 })
 export class ScoreBreakdownComponent {
   readonly evaluation = input.required<Evaluation>();
+
+  protected readonly detailed = signal(false);
+
+  /** e.g. "21 + 16 + 12 + 13 + 7 + 6 + 3 = 78 / 100 · scheme v1" */
+  protected readonly sumLine = computed(() => {
+    const evaluation = this.evaluation();
+    const parts = evaluation.categories.map((category) => category.score).join(' + ');
+    return `${parts} = ${evaluation.totalScore} / ${evaluation.maxScore} · scheme ${evaluation.markingSchemeVersion}`;
+  });
+
+  protected toggleDetail(): void {
+    this.detailed.update((value) => !value);
+  }
 }

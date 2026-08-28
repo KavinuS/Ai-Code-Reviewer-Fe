@@ -1,247 +1,179 @@
 <!-- Hero -->
-<section class="border-b border-slate-200 bg-linear-to-b from-slate-50 to-white">
-  <div class="mx-auto max-w-4xl px-4 py-16 sm:py-24">
-    <p class="text-sm font-semibold uppercase tracking-wide text-slate-500">
-      AI Code Review Assistant
-    </p>
+<section style="padding:clamp(48px,8vw,104px) clamp(16px,3vw,40px) clamp(40px,6vw,72px); max-width:1400px; width:100%; margin:0 auto">
+  <h6 style="color:var(--color-accent); margin-bottom:16px">AI code review</h6>
 
-    <h1 class="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-      Find the problems in your code before someone else does.
-    </h1>
+  <h1 style="font-size:clamp(40px,7vw,72px); margin:0; max-width:16ch">
+    Find the problems before the reviewer does.
+  </h1>
 
-    <p class="mt-5 max-w-2xl text-lg leading-relaxed text-slate-700">
-      Analyze your code with AI to find bugs, security risks, performance issues, and
-      opportunities for improvement.
-    </p>
+  <p style="font-size:clamp(16px,2vw,19px); max-width:52ch; margin:24px 0 0" class="text-muted">
+    Paste a file. Get every bug, security risk and performance problem found in it &mdash;
+    each one explained, located, and paired with a fix.
+  </p>
 
-    <p class="mt-3 max-w-2xl text-base leading-relaxed text-slate-600">
-      The application also evaluates your code using a general 100-point coding marking
-      scheme and explains how your score was calculated &mdash; category by category, with
-      the arithmetic shown.
-    </p>
+  <p style="font-size:15px; max-width:52ch; margin:12px 0 0" class="text-muted">
+    Then a score out of 100 across seven categories, with the arithmetic shown. The AI
+    proposes the category scores; the backend validates them and calculates the total.
+  </p>
 
-    <div class="mt-8 flex flex-wrap items-center gap-4">
-      <a
-        routerLink="/review"
-        class="inline-flex items-center rounded-lg bg-slate-900 px-7 py-3 text-base font-semibold text-white transition hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-      >
-        Review Code
-      </a>
+  <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:36px">
+    <a routerLink="/review" class="btn btn-primary btn-lg">Review code</a>
+    <a href="#scoring" class="btn btn-secondary btn-lg">How scoring works</a>
+  </div>
+</section>
 
-      <a
-        href="#scoring"
-        class="inline-flex items-center rounded-lg border border-slate-300 px-7 py-3 text-base font-semibold text-slate-800 transition hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-      >
-        How scoring works
-      </a>
+<!-- What the review looks for -->
+<section style="border-top:2px solid var(--color-divider)">
+  <div style="max-width:1400px; margin:0 auto; padding:0 clamp(16px,3vw,40px)">
+    <div style="padding:clamp(32px,4vw,56px) 0 clamp(20px,2vw,28px)">
+      <h6 class="text-muted" style="margin:0 0 8px">What it finds</h6>
+      <h2 style="font-size:clamp(26px,3.4vw,36px); margin:0; max-width:24ch">
+        Six kinds of problem, one explanation each.
+      </h2>
     </div>
 
-    <!--
-      Backend connection indicator. Each state carries a text label as well as a
-      colour, so status is never communicated by colour alone.
-    -->
-    <div class="mt-8">
-      @switch (connectionState()) {
-        @case ('checking') {
-          <span class="text-sm text-slate-600" role="status">Checking backend...</span>
-        }
-        @case ('online') {
-          <span
-            class="inline-flex items-center gap-2 rounded-full border border-green-300 bg-green-50 px-3 py-1 text-sm font-medium text-green-900"
-            role="status"
-          >
-            <span aria-hidden="true" class="h-2 w-2 rounded-full bg-green-600"></span>
-            Backend connected
-          </span>
-        }
-        @case ('degraded') {
-          <span
-            class="inline-flex items-center gap-2 rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-sm font-medium text-amber-900"
-            role="status"
-          >
-            <span aria-hidden="true" class="h-2 w-2 rounded-full bg-amber-500"></span>
-            Backend degraded
-          </span>
-        }
-        @case ('offline') {
-          <span
-            class="inline-flex items-center gap-2 rounded-full border border-red-300 bg-red-50 px-3 py-1 text-sm font-medium text-red-900"
-            role="status"
-          >
-            <span aria-hidden="true" class="h-2 w-2 rounded-full bg-red-600"></span>
-            Backend unreachable
-          </span>
-        }
-      }
-
-      @if (connectionState() === 'offline') {
-        <div class="mt-4 max-w-lg">
-          <app-error-message
-            title="Cannot reach the API"
-            message="Start the Django server with: python manage.py runserver"
-            [retryable]="true"
-            (retry)="checkConnection()"
-          />
+    <div class="grid-hairline" style="grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); margin-bottom:clamp(32px,4vw,56px)">
+      @for (capability of capabilities; track capability.title) {
+        <div style="display:flex; flex-direction:column; gap:8px">
+          <span class="tag tag-neutral" style="align-self:flex-start">{{ capability.tag }}</span>
+          <strong style="font-family:var(--font-heading); font-weight:800; font-size:17px; line-height:1.2">
+            {{ capability.title }}
+          </strong>
+          <p class="text-muted" style="font-size:13px; margin:0">{{ capability.description }}</p>
         </div>
-      }
-
-      @if (health(); as status) {
-        <p class="mt-3 text-xs text-slate-500">
-          {{ status.service }} v{{ status.version }} &middot; {{ status.environment }}
-          &middot; database: {{ status.checks.database.status }} &middot; cache:
-          {{ status.checks.cache.status }} ({{ status.checks.cache.backend }})
-        </p>
       }
     </div>
   </div>
 </section>
 
-<!-- What the review looks for -->
-<section class="mx-auto max-w-4xl px-4 py-16">
-  <h2 class="text-2xl font-bold tracking-tight text-slate-900">What the review looks for</h2>
-  <p class="mt-2 text-slate-600">
-    Every finding explains why it is a problem, points at the affected line where it can
-    be determined, and suggests a fix.
-  </p>
-
-  <ul class="mt-8 grid gap-5 sm:grid-cols-2">
-    @for (capability of capabilities; track capability.title) {
-      <li class="rounded-xl border border-slate-200 bg-white p-5">
-        <h3 class="font-semibold text-slate-900">{{ capability.title }}</h3>
-        <p class="mt-1.5 text-sm leading-relaxed text-slate-600">
-          {{ capability.description }}
-        </p>
-      </li>
-    }
-  </ul>
-</section>
-
 <!-- How it works -->
-<section class="border-y border-slate-200 bg-slate-50">
-  <div class="mx-auto max-w-4xl px-4 py-16">
-    <h2 class="text-2xl font-bold tracking-tight text-slate-900">How it works</h2>
+<section style="border-top:2px solid var(--color-divider)">
+  <div style="max-width:1400px; margin:0 auto; padding:clamp(32px,4vw,56px) clamp(16px,3vw,40px)">
+    <h6 class="text-muted" style="margin:0 0 8px">How it works</h6>
+    <h2 style="font-size:clamp(26px,3.4vw,36px); margin:0 0 32px; max-width:24ch">
+      Four steps, no sign-up.
+    </h2>
 
-    <ol class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <ol style="list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:28px">
       @for (step of steps; track step.title; let index = $index) {
-        <li class="relative rounded-xl border border-slate-200 bg-white p-5">
-          <span
-            class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white"
-            aria-hidden="true"
-          >
-            {{ index + 1 }}
+        <li style="border-top:2px solid var(--color-divider); padding-top:16px">
+          <span class="mono" style="color:var(--color-accent); font-size:12px">
+            0{{ index + 1 }}
           </span>
-          <h3 class="mt-3 font-semibold text-slate-900">
-            <span class="sr-only">Step {{ index + 1 }}:</span>{{ step.title }}
-          </h3>
-          <p class="mt-1.5 text-sm leading-relaxed text-slate-600">{{ step.description }}</p>
+          <strong style="display:block; font-family:var(--font-heading); font-weight:800; font-size:17px; margin-top:8px">
+            {{ step.title }}
+          </strong>
+          <p class="text-muted" style="font-size:13px; margin:6px 0 0">{{ step.description }}</p>
         </li>
       }
     </ol>
 
-    <p class="mt-8 max-w-2xl text-sm text-slate-600">
-      Your code is sent to the AI provider by the backend only. The API key never reaches
-      the browser, and neither your code nor any AI-suggested code is ever executed.
+    <p class="text-muted" style="font-size:13px; max-width:60ch; margin-top:32px">
+      Your code reaches the AI provider through the backend only. The API key never
+      reaches the browser, and neither your code nor any suggested fix is ever executed.
     </p>
   </div>
 </section>
 
 <!-- Scoring -->
-<section id="scoring" class="mx-auto max-w-4xl px-4 py-16">
-  <h2 class="text-2xl font-bold tracking-tight text-slate-900">
-    Transparent, category-based scoring
-  </h2>
-  <p class="mt-2 max-w-2xl text-slate-600">
-    Every review is marked against these categories. The AI proposes the category scores;
-    the backend validates them and calculates the total, grade and band. The number you see
-    is always the sum of its parts.
-  </p>
+<section id="scoring" style="border-top:2px solid var(--color-divider)">
+  <div style="max-width:1400px; margin:0 auto; padding:clamp(32px,4vw,56px) clamp(16px,3vw,40px)">
+    <h6 style="color:var(--color-accent); margin:0 0 8px">Marking scheme</h6>
+    <h2 style="font-size:clamp(26px,3.4vw,36px); margin:0 0 12px; max-width:24ch">
+      The score is the sum of its parts.
+    </h2>
+    <p class="text-muted" style="font-size:14px; max-width:60ch">
+      Published by the API, not hard-coded in this page &mdash; so the criteria you read
+      here are exactly the ones your code is marked against.
+    </p>
 
-  @if (criteriaLoading()) {
-    <app-loading label="Loading evaluation criteria..." />
-  } @else if (criteriaError(); as error) {
-    <div class="mt-4">
-      <app-error-message
-        title="Could not load the evaluation criteria"
-        [message]="error.message"
-        [retryable]="true"
-        (retry)="loadCriteria()"
-      />
-    </div>
-  } @else if (markingScheme(); as scheme) {
-    <div class="mt-6 overflow-x-auto">
-      <table class="w-full border-collapse text-left text-sm">
-        <caption class="sr-only">Evaluation categories and their maximum points</caption>
-        <thead>
-          <tr class="border-b border-slate-300 text-slate-700">
-            <th scope="col" class="py-2 pr-4 font-semibold">Category</th>
-            <th scope="col" class="py-2 text-right font-semibold">Maximum points</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (category of scheme.categories; track category.key) {
-            <tr class="border-b border-slate-200 align-top">
-              <th scope="row" class="py-3 pr-4 font-medium text-slate-900">
-                {{ category.name }}
-                <span class="mt-1 block text-xs font-normal text-slate-600">
-                  {{ category.description }}
+    @if (criteriaLoading()) {
+      <app-loading label="Loading evaluation criteria..." />
+    } @else if (criteriaError(); as error) {
+      <div style="max-width:520px; margin-top:16px">
+        <app-error-message
+          title="Could not load the evaluation criteria"
+          [message]="error.message"
+          [retryable]="true"
+          (retry)="loadCriteria()"
+        />
+      </div>
+    } @else if (markingScheme(); as scheme) {
+      <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:clamp(24px,4vw,48px); margin-top:32px">
+        <div>
+          <table class="table">
+            <caption class="sr-only">Evaluation categories and their maximum points</caption>
+            <thead>
+              <tr>
+                <th>Category</th>
+                <th class="num">Points</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (category of scheme.categories; track category.key) {
+                <tr>
+                  <th scope="row" style="text-align:left; font-weight:400; text-transform:none; letter-spacing:normal; font-size:14px; color:var(--color-text); border-bottom:1px solid var(--color-divider); padding:8px">
+                    {{ category.name }}
+                    <span class="text-muted" style="display:block; font-size:12px; margin-top:2px">
+                      {{ category.description }}
+                    </span>
+                  </th>
+                  <td class="num mono" style="vertical-align:top">{{ category.maxScore }}</td>
+                </tr>
+              }
+            </tbody>
+            <tfoot>
+              <tr>
+                <td style="font-family:var(--font-heading); font-weight:800">Total</td>
+                <td class="num mono" style="font-weight:800">{{ scheme.maxScore }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div>
+          <h6 class="text-muted" style="margin:0 0 16px">Grade bands</h6>
+          <div style="display:flex; flex-direction:column; gap:2px">
+            @for (band of scheme.gradeBands; track band.grade) {
+              <div style="display:flex; gap:14px; align-items:baseline; padding:12px 0; border-bottom:1px solid var(--color-divider)">
+                <span
+                  class="mono"
+                  style="font-size:20px; font-weight:700; width:1.5ch; flex:none; color:var(--color-accent)"
+                >
+                  {{ band.grade }}
                 </span>
-              </th>
-              <td class="py-3 text-right font-semibold tabular-nums text-slate-900">
-                {{ category.maxScore }}
-              </td>
-            </tr>
-          }
-        </tbody>
-        <tfoot>
-          <tr>
-            <th scope="row" class="py-3 pr-4 text-right font-bold text-slate-900">Total</th>
-            <td class="py-3 text-right font-bold tabular-nums text-slate-900">
-              {{ scheme.maxScore }}
-            </td>
-          </tr>
-        </tfoot>
-      </table>
+                <span class="mono text-muted tabular" style="font-size:12px; width:7ch; flex:none">
+                  {{ band.minScore }}&ndash;{{ band.maxScore }}
+                </span>
+                <span>
+                  <strong style="font-size:14px">{{ band.band }}</strong>
+                  <span class="text-muted" style="display:block; font-size:12.5px">
+                    {{ band.meaning }}
+                  </span>
+                </span>
+              </div>
+            }
+          </div>
+
+          <div style="border-left:2px solid var(--color-accent); padding:12px 16px; margin-top:28px">
+            <strong style="font-size:14px">What the score is not</strong>
+            <p class="text-muted" style="font-size:13px; margin:6px 0 0">
+              An aid for improving code, not a measure of a developer's ability. It reflects
+              only the code submitted, without the requirements or constraints behind it. A
+              low score on a deliberate prototype means very little; a high score does not
+              prove the code is correct.
+            </p>
+            <p class="mono text-muted" style="font-size:11.5px; margin:10px 0 0">
+              scheme {{ scheme.version }} &middot; {{ scheme.languages.length }} languages
+            </p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:48px; border-top:2px solid var(--color-divider); padding-top:32px">
+      <a routerLink="/review" class="btn btn-primary btn-lg">Review code</a>
+      <span class="text-muted" style="font-size:13px">Paste a file and get a review.</span>
     </div>
-
-    <h3 class="mt-12 text-lg font-semibold text-slate-900">Grade bands</h3>
-    <ul class="mt-4 grid gap-3 sm:grid-cols-2">
-      @for (band of scheme.gradeBands; track band.grade) {
-        <li class="rounded-lg border border-slate-200 p-4">
-          <p class="flex flex-wrap items-baseline gap-x-3">
-            <span class="font-mono text-lg font-bold text-slate-900">{{ band.grade }}</span>
-            <span class="tabular-nums text-sm text-slate-700">
-              {{ band.minScore }}&ndash;{{ band.maxScore }}
-            </span>
-            <span class="text-sm font-semibold text-slate-900">{{ band.band }}</span>
-          </p>
-          <p class="mt-1 text-sm text-slate-600">{{ band.meaning }}</p>
-        </li>
-      }
-    </ul>
-
-    <div class="mt-10 rounded-xl border border-slate-200 bg-slate-50 p-5">
-      <h3 class="font-semibold text-slate-900">About the score</h3>
-      <p class="mt-2 text-sm leading-relaxed text-slate-600">
-        This evaluation is an aid for improving code, not a measure of a developer's
-        ability. It reflects only the code submitted, without the context, requirements or
-        constraints behind it. A low score on a deliberate prototype means very little; a
-        high score does not prove the code is correct. Treat it as structured feedback and
-        apply your own judgement.
-      </p>
-      <p class="mt-3 text-xs text-slate-500">
-        Marking scheme version {{ scheme.version }} &middot;
-        {{ scheme.languages.length }} languages supported
-      </p>
-    </div>
-  }
-
-  <div class="mt-12 flex flex-wrap items-center gap-4 border-t border-slate-200 pt-10">
-    <a
-      routerLink="/review"
-      class="inline-flex items-center rounded-lg bg-slate-900 px-7 py-3 text-base font-semibold text-white transition hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
-    >
-      Review Code
-    </a>
-    <span class="text-sm text-slate-600">No sign-up. Paste code and get a review.</span>
   </div>
 </section>
