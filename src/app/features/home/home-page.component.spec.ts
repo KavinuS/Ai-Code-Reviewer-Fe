@@ -41,6 +41,7 @@ describe('HomePageComponent', () => {
   afterEach(() => {
     httpMock.verify();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   /** Force the reduced-motion media query to a known answer. */
@@ -116,22 +117,49 @@ describe('HomePageComponent', () => {
         'neural-network-loop.mp4',
       );
       // A background video must never grab audio or the tab's focus order.
-      const video = element.querySelector('video')!;
-      expect(video.hasAttribute('muted')).toBe(true);
+      // `muted` is asserted as the DOM PROPERTY, not the attribute: the
+      // attribute alone leaves the property false on a script-created element,
+      // the browser then refuses to autoplay, and an attribute-only assertion
+      // passes while the video never starts. That is the bug this pins.
+      const video = element.querySelector('video') as HTMLVideoElement;
+      expect(video.muted).toBe(true);
       expect(video.hasAttribute('loop')).toBe(true);
       expect(video.getAttribute('tabindex')).toBe('-1');
     });
 
-    it('offers a control to stop the motion', async () => {
+    it('offers a pause control once playback starts', async () => {
+      // jsdom cannot actually play media, so playback is stubbed to succeed.
+      vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
       stubReducedMotion(false);
+
       const fixture = render();
       await fixture.whenStable();
       fixture.detectChanges();
 
+      expect(fixture.componentInstance.videoPaused()).toBe(false);
       const toggle = (fixture.nativeElement as HTMLElement).querySelector(
         '.landing-motion-toggle',
       );
       expect(toggle?.textContent?.trim()).toBe('Pause background');
+    });
+
+    it('shows a play control when the browser refuses autoplay', async () => {
+      // Data saver, power saving or a browser setting can all refuse playback.
+      vi.spyOn(HTMLMediaElement.prototype, 'play').mockRejectedValue(
+        new DOMException('NotAllowedError'),
+      );
+      stubReducedMotion(false);
+
+      const fixture = render();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(fixture.componentInstance.videoPaused()).toBe(true);
+      const toggle = (fixture.nativeElement as HTMLElement).querySelector(
+        '.landing-motion-toggle',
+      );
+      // The control must not claim to pause a video that never started.
+      expect(toggle?.textContent?.trim()).toBe('Play background');
     });
 
     it('renders no video at all under prefers-reduced-motion', async () => {

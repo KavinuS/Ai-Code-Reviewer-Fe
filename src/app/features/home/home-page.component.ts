@@ -7,12 +7,17 @@
  * than restating it in markup, so the criteria a visitor reads here are exactly
  * the ones their code will be marked against. The backend-connection indicator
  * lives in the nav now, on every route, rather than only on this page.
+ *
+ * The only page that stays open to a signed-out visitor, because it is where
+ * somebody decides whether to sign up. Its call to action therefore says what
+ * will actually happen when it is clicked - see `reviewCtaLabel`.
  */
 import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
   OnInit,
+  computed,
   effect,
   inject,
   signal,
@@ -22,6 +27,7 @@ import { RouterLink } from '@angular/router';
 
 import { ApiClientService } from '../../core/api/api-client.service';
 import { ApiError } from '../../core/api/api-error';
+import { AuthService } from '../../core/auth/auth.service';
 import { MarkingScheme } from '../../core/models/marking-scheme.model';
 import { EvaluationCriteriaService } from '../../core/services/evaluation-criteria.service';
 import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
@@ -37,6 +43,23 @@ import { LoadingComponent } from '../../shared/components/loading/loading.compon
 export class HomePageComponent implements OnInit {
   private readonly criteriaService = inject(EvaluationCriteriaService);
   private readonly api = inject(ApiClientService);
+  private readonly auth = inject(AuthService);
+
+  /**
+   * "Review code" for a visitor who can, "Sign in to review" for one who
+   * cannot. Clicking either reaches the same place - the guard on /review
+   * carries a signed-out visitor to the sign-in form and back again - but a
+   * button that opens a login page should say so first.
+   *
+   * Only an explicitly anonymous session changes the label. While the session
+   * is still 'unknown' the optimistic wording is used, so a returning user
+   * does not watch "Sign in to review" flip to "Review code" as their stored
+   * token is checked. A first-time visitor has nothing stored, so their status
+   * settles without a request and the label is right immediately.
+   */
+  protected readonly reviewCtaLabel = computed(() =>
+    this.auth.status() === 'anonymous' ? 'Sign in to review' : 'Review code',
+  );
 
   readonly markingScheme = signal<MarkingScheme | null>(null);
   readonly criteriaLoading = signal(false);
@@ -83,7 +106,16 @@ export class HomePageComponent implements OnInit {
    */
   private startPlayback(element: HTMLVideoElement): void {
     element.muted = true;
-    element.play().then(
+
+    // play() returns a promise in every current browser, but not in older ones
+    // and not under jsdom, so the return value is checked before it is chained.
+    const started = element.play() as Promise<void> | undefined;
+    if (!started?.then) {
+      this.videoPaused.set(element.paused);
+      return;
+    }
+
+    started.then(
       () => this.videoPaused.set(false),
       // Still refused (data saver, power saving, a browser setting). Show the
       // control as "Play" rather than lying about the state.

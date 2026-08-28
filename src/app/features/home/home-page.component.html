@@ -18,7 +18,7 @@
         (play)="videoPaused.set(false)"
         (pause)="videoPaused.set(true)"
       >
-        <source src="neural-network-loop.mp4" type="video/mp4" />
+        <source src="Neural_network_landing_page_loop_202608281915.mp4" type="video/mp4" />
       </video>
     }
     <div class="landing-scrim"></div>
@@ -45,7 +45,7 @@
   </p>
 
   <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:36px">
-    <a routerLink="/review" class="btn btn-primary btn-lg">Review code</a>
+    <a routerLink="/review" class="btn btn-primary btn-lg">{{ reviewCtaLabel() }}</a>
     <a href="#scoring" class="btn btn-secondary btn-lg">How scoring works</a>
   </div>
 
@@ -67,7 +67,7 @@
       </h2>
     </div>
 
-    <div class="grid-hairline" style="grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); margin-bottom:clamp(32px,4vw,56px)">
+    <div class="grid-hairline landing-capabilities">
       @for (capability of capabilities; track capability.title) {
         <div style="display:flex; flex-direction:column; gap:8px">
           <span class="tag tag-neutral" style="align-self:flex-start">{{ capability.tag }}</span>
@@ -207,8 +207,10 @@
     }
 
     <div style="display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:48px; border-top:2px solid var(--color-divider); padding-top:32px">
-      <a routerLink="/review" class="btn btn-primary btn-lg">Review code</a>
-      <span class="text-muted" style="font-size:13px">Paste a file and get a review.</span>
+      <a routerLink="/review" class="btn btn-primary btn-lg">{{ reviewCtaLabel() }}</a>
+      <span class="text-muted" style="font-size:13px">
+        Paste a file and get a review. Running one needs a free account.
+      </span>
     </div>
   </div>
 </section>

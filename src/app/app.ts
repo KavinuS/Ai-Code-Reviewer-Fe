@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { BackendStatusComponent } from './shared/components/backend-status/backend-status.component';
+import { UserMenuComponent } from './shared/components/user-menu/user-menu.component';
 
 /**
  * Root shell: the persistent nav from the design, the routed view, and the
@@ -14,7 +15,13 @@ import { BackendStatusComponent } from './shared/components/backend-status/backe
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, BackendStatusComponent],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    BackendStatusComponent,
+    UserMenuComponent,
+  ],
   templateUrl: './app.html',
 })
 export class App {}

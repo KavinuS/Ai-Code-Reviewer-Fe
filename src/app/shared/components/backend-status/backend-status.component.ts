@@ -2,14 +2,13 @@
  * The nav's backend-connection indicator.
  *
  * The design puts a "Backend connected" chip and a user identity in the top
- * right. There is no authentication in this application, so the identity slot
- * carries something true instead: the marking scheme version the API is
- * serving, which is the one piece of backend state that changes what a score
- * means.
+ * right. The identity is `UserMenuComponent`; this half reports the connection
+ * and the marking scheme version the API is serving, which is the one piece of
+ * backend state that changes what a score means.
  *
- * Lifted out of the home page in this pass so the indicator is present on every
- * route, as the design intends. Each state carries a text label, so the dot's
- * colour is reinforcement rather than the only signal.
+ * Lifted out of the home page so the indicator is present on every route, as
+ * the design intends. Each state carries a text label, so the dot's colour is
+ * reinforcement rather than the only signal.
  */
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 
