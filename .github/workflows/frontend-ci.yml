@@ -115,10 +115,6 @@ jobs:
   format:
     name: Prettier (report only)
     runs-on: ubuntu-latest
-    # The codebase has not been run through Prettier yet, so this reports the
-    # files that differ without blocking a merge. Once `npx prettier --write .`
-    # has been committed, delete this line to make formatting a hard gate.
-    continue-on-error: true
 
     steps:
       - uses: actions/checkout@v5
@@ -134,4 +130,9 @@ jobs:
         run: npm ci
 
       - name: Check formatting
+        # The codebase has not been run through Prettier yet, so this reports
+        # the files that differ without failing this report-only job. Once
+        # `npx prettier --write .` has been committed, delete this line to make
+        # formatting a hard gate.
+        continue-on-error: true
         run: npx prettier --check .
