@@ -1,0 +1,138 @@
+# Frontend CI - Angular application.
+#
+# Four jobs run in parallel rather than in a chain, so a failure names itself:
+#
+#   types   - tsc over both project references, including the specs
+#   test    - the Vitest unit suite (component contracts against the API shape)
+#   build   - the production bundle, which also enforces the angular.json budgets
+#   format  - Prettier, reporting only (see the note on that job)
+#
+# The build never needs an API key or a backend: environment.ts holds only the
+# API base URL, and the app talks to Django at runtime, not at build time.
+
+name: Frontend CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: frontend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Angular 21 supports Node 20.19+, 22 and 24; 22 is the current LTS.
+  NODE_VERSION: '22.x'
+
+jobs:
+  types:
+    name: Type-check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Separate from `build` because tsconfig.app.json excludes *.spec.ts, so
+      # `ng build` never type-checks a single test file: a spec can drift out of
+      # step with a changed interface and still produce a green build.
+      #
+      # `--build` matters. tsconfig.json is a solution file ("files": [] plus
+      # references), so plain `tsc --noEmit -p tsconfig.json` compiles NOTHING
+      # and exits 0 - a check that passes because it did no work. `--build`
+      # walks the references and compiles the app and the specs.
+      - name: Type-check (app and specs)
+        run: npx tsc --build --noEmit
+
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      # `npm ci` rather than `npm install`: it installs exactly the lockfile and
+      # fails if package.json and the lockfile have drifted apart.
+      - name: Install dependencies
+        run: npm ci
+
+      # --watch=false because the builder otherwise stays resident and the job
+      # would hang until the runner times out.
+      - name: Run tests
+        run: npx ng test --watch=false
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Compiles templates and TypeScript, prerenders the static route and
+      # enforces the bundle budgets, so a size regression fails here.
+      - name: Build
+        run: npx ng build --configuration production
+
+      - name: Upload build output
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: dist/frontend
+          retention-days: 7
+
+  format:
+    name: Prettier (report only)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        # The codebase has not been run through Prettier yet, so this reports
+        # the files that differ without failing this report-only job. Once
+        # `npx prettier --write .` has been committed, delete this line to make
+        # formatting a hard gate.
+        continue-on-error: true
+        run: npx prettier --check .
