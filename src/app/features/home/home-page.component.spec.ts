@@ -114,7 +114,7 @@ describe('HomePageComponent', () => {
       expect(fixture.componentInstance.videoEnabled()).toBe(true);
       expect(element.querySelector('video')).toBeTruthy();
       expect(element.querySelector('source')?.getAttribute('src')).toBe(
-        'neural-network-loop.mp4',
+        'Neural_network_landing_page_loop_202608281915.mp4',
       );
       // A background video must never grab audio or the tab's focus order.
       // `muted` is asserted as the DOM PROPERTY, not the attribute: the
