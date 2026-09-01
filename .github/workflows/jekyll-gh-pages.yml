@@ -1,5 +1,26 @@
-# Sample workflow for building and deploying a Jekyll site to GitHub Pages
-name: Deploy Jekyll with GitHub Pages dependencies preinstalled
+# Deploy the Angular app to GitHub Pages.
+#
+# This started as GitHub's Jekyll Pages template and keeps its whole deployment
+# half unchanged - configure-pages -> upload-pages-artifact -> deploy-pages is
+# the standard Pages pipeline and is not Jekyll-specific. Only the build step
+# differs: `actions/jekyll-build-pages` turns Markdown and Liquid into a site,
+# and there is none of either here, so it is replaced by `ng build`.
+#
+# Note the `.nojekyll` marker below. GitHub Pages runs Jekyll over published
+# output by default, and Jekyll silently drops files and directories whose names
+# begin with an underscore - which is exactly how bundlers name things. For a
+# compiled SPA you want Jekyll switched off, so that marker is not optional.
+#
+# WHAT THIS SITE CAN AND CANNOT DO
+#
+# The published site is the user interface only. `environment.ts` points
+# `apiBaseUrl` at `/api`, expecting a reverse proxy in front of Django; on
+# github.io there is no such backend, so the marking scheme, sign-in, review and
+# history requests will all fail. The landing page renders; nothing that needs
+# the API works. When Django is hosted somewhere public, set that URL in
+# `src/environments/environment.ts` and the same build starts working.
+
+name: Deploy Angular app to GitHub Pages
 
 on:
   # Runs on pushes targeting the default branch
@@ -15,11 +36,17 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Allow only one concurrent deployment, skipping runs queued between the run
+# in-progress and latest queued. However, do NOT cancel in-progress runs as we
+# want to allow these production deployments to complete.
 concurrency:
   group: "pages"
   cancel-in-progress: false
+
+env:
+  # Matches the CI workflow, so the bundle that is deployed is built by the same
+  # Node the tests ran on.
+  NODE_VERSION: '22.x'
 
 jobs:
   # Build job
@@ -27,16 +54,56 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
         with:
-          source: ./
-          destination: ./_site
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      # The `github-pages` configuration in angular.json switches outputMode
+      # from "server" to "static" and turns SSR off: Pages serves files, it
+      # cannot run the Node server that src/server.ts expects.
+      #
+      # base-href is taken from the Pages configuration rather than hardcoded,
+      # so renaming the repository cannot silently break every asset URL. The
+      # substitution collapses "//" for a user site, where base_path is already
+      # "/".
+      - name: Build with Angular
+        run: |
+          BASE="${{ steps.pages.outputs.base_path }}/"
+          BASE="${BASE//\/\//\/}"
+          echo "Building with base-href $BASE"
+          npx ng build --configuration production,github-pages --base-href "$BASE"
+
+      # Two things Pages needs that the build does not produce:
+      #
+      #   404.html - Pages has no server-side routing, so a deep link such as
+      #              /review is a miss. Pages serves 404.html for a miss, and
+      #              because that is a copy of index.html the Angular router
+      #              boots and resolves the URL itself. Without it every route
+      #              except the root 404s on refresh or on a shared link.
+      #   .nojekyll - see the note at the top of this file.
+      - name: Add SPA fallback and disable Jekyll processing
+        run: |
+          cp dist/frontend/browser/index.html dist/frontend/browser/404.html
+          touch dist/frontend/browser/.nojekyll
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
+        with:
+          # The browser bundle only. `dist/frontend/server` is the SSR output,
+          # which is empty in a static build and would be dead weight anyway.
+          path: dist/frontend/browser
 
   # Deployment job
   deploy:
