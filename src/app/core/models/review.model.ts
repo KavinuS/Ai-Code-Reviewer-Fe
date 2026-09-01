@@ -65,6 +65,8 @@ export interface Evaluation {
 }
 
 export interface ReviewResult {
+  /** Identity of the stored review. Empty when it was not persisted. */
+  readonly id: string;
   readonly summary: string;
   readonly language: string;
   readonly filename: string;
@@ -101,3 +103,34 @@ export const SEVERITY_ORDER: readonly Severity[] = [
   'LOW',
   'INFO',
 ];
+
+/**
+ * One row of the history list.
+ *
+ * Deliberately not a `ReviewResult`: the list endpoint returns a summary
+ * projection without the categories, the issues or the submitted code. Typing
+ * it as its own interface stops a component reaching for `evaluation` on a row
+ * that never carried one.
+ */
+export interface ReviewHistoryItem {
+  readonly id: string;
+  readonly language: string;
+  readonly filename: string;
+  readonly summary: string;
+  readonly score: number;
+  readonly maxScore: number;
+  readonly grade: string;
+  readonly evaluationBand: string;
+  readonly markingSchemeVersion: string;
+  readonly issueCount: number;
+  /** ISO 8601, UTC. */
+  readonly createdAt: string;
+}
+
+/** DRF's PageNumberPagination envelope. */
+export interface Paginated<T> {
+  readonly count: number;
+  readonly next: string | null;
+  readonly previous: string | null;
+  readonly results: readonly T[];
+}

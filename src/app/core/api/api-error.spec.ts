@@ -29,6 +29,35 @@ describe('toApiError', () => {
     expect(error.message).not.toContain('secret internal detail');
   });
 
+  it('keeps the backend wording for a handled upstream failure', () => {
+    // A 503 the review pipeline raised on purpose: the generic "try again
+    // shortly" would be wrong advice, since only an administrator can fix it.
+    const error = toApiError(
+      new HttpErrorResponse({
+        status: 503,
+        error: {
+          detail: 'The AI review service has run out of credit.',
+          code: 'ai_quota_exceeded',
+        },
+      }),
+    );
+
+    expect(error.kind).toBe('server');
+    expect(error.message).toBe('The AI review service has run out of credit.');
+  });
+
+  it('stays generic for a 500 whose body is a raw crash page', () => {
+    const error = toApiError(
+      new HttpErrorResponse({
+        status: 500,
+        error: '<html><body>Traceback: secret internal detail</body></html>',
+      }),
+    );
+
+    expect(error.kind).toBe('server');
+    expect(error.message).not.toContain('secret internal detail');
+  });
+
   it('surfaces a DRF detail message for client errors', () => {
     const error = toApiError(
       new HttpErrorResponse({ status: 400, error: { detail: 'Language is not supported.' } }),

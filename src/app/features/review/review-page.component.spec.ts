@@ -21,6 +21,7 @@ const markingScheme = {
 };
 
 const reviewResult: ReviewResult = {
+  id: '6f1c9d4e-6f0f-4d2a-9a5f-3f0d2c1b4a77',
   summary: 'The service works but does not validate input.',
   language: 'python',
   filename: 'service.py',

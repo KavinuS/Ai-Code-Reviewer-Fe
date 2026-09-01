@@ -6,8 +6,9 @@ import { requireAnonymous, requireAuth } from './core/auth/auth.guard';
  * Application routes.
  *
  * Every feature is lazily loaded with `loadComponent`, so a visitor to the
- * landing page downloads only that page. History and Dashboard exist as routes
- * now because the design's navigation offers all three tabs; a nav entry that
+ * landing page downloads only that page. History lists stored reviews and
+ * `history/:id` opens one; Dashboard is still a route without data behind it,
+ * because the design's navigation offers all three tabs and a nav entry that
  * leads nowhere is worse than one that explains what is coming.
  *
  * Everything except the landing page and the auth pages requires an account.
@@ -44,6 +45,18 @@ export const routes: Routes = [
     canActivate: [requireAuth],
     loadComponent: () =>
       import('./features/history/history-page.component').then((m) => m.HistoryPageComponent),
+  },
+  {
+    // Registered after 'history' so the static path wins, and before the
+    // wildcard so an unknown id still reaches the page (which shows the
+    // backend's 404 as an error) rather than silently redirecting home.
+    path: 'history/:id',
+    title: 'Review - CODEREVIEW/AI',
+    canActivate: [requireAuth],
+    loadComponent: () =>
+      import('./features/history/history-detail-page.component').then(
+        (m) => m.HistoryDetailPageComponent,
+      ),
   },
   {
     path: 'dashboard',

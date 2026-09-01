@@ -41,6 +41,23 @@ function extractServerMessage(body: unknown): string | null {
   return null;
 }
 
+/**
+ * True for a body our own DRF exception handler produced.
+ *
+ * That handler pairs every `detail` with a machine-readable `code`, and its
+ * `detail` is a deliberately written, safe user message. An unhandled crash
+ * cannot produce that pairing - it yields Django's HTML debug page or a bare
+ * `detail` - so the two keys together are what makes a 5xx body trustworthy
+ * enough to show.
+ */
+function isHandledServerError(body: unknown): boolean {
+  if (!body || typeof body !== 'object') {
+    return false;
+  }
+  const record = body as Record<string, unknown>;
+  return typeof record['detail'] === 'string' && typeof record['code'] === 'string';
+}
+
 /** Collect DRF's `{ field: ["msg", ...] }` validation errors. */
 function extractFieldErrors(body: unknown): Record<string, string[]> | undefined {
   if (!body || typeof body !== 'object') {
@@ -69,8 +86,16 @@ export function toApiError(error: unknown): ApiError {
     return { message: NETWORK_MESSAGE, status: 0, kind: 'network' };
   }
 
+  // 502/503/504 are raised on purpose by the backend to say *why* a review
+  // could not run - the provider is down, timed out, or out of credit. Those
+  // messages are the difference between "try again shortly" and "an
+  // administrator must act", so a handled error keeps its own wording and only
+  // an unrecognised body falls back to the generic line.
   if (error.status >= 500) {
-    return { message: SERVER_MESSAGE, status: error.status, kind: 'server' };
+    const message = isHandledServerError(error.error)
+      ? (extractServerMessage(error.error) ?? SERVER_MESSAGE)
+      : SERVER_MESSAGE;
+    return { message, status: error.status, kind: 'server' };
   }
 
   return {

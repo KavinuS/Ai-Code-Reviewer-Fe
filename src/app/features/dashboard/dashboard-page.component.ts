@@ -3,7 +3,7 @@
  *
  * Same reasoning as the history page: the design's stat tiles, trend chart and
  * recurring-findings table all aggregate stored reviews, which arrive in
- * Phase 6 on top of Phase 5's database. The layout is built now with the tiles
+ * Phase 6 on top of the stored reviews. The layout is built now with the tiles
  * showing an explicit "no data" dash instead of invented figures.
  */
 import { ChangeDetectionStrategy, Component } from '@angular/core';
@@ -39,7 +39,7 @@ import { RouterLink } from '@angular/router';
         <strong style="font-size:15.5px">Statistics are not connected yet.</strong>
         <p class="text-muted" style="font-size:13px; margin:6px 0 0; max-width:64ch">
           Averages, score trends and recurring findings are aggregated across stored
-          reviews. Phase 5 adds the storage; Phase 6 adds the
+          reviews. The storage now exists; Phase 6 adds the
           <span class="mono">GET /api/dashboard/</span> endpoint that fills these tiles.
         </p>
         <a routerLink="/review" class="btn btn-primary btn-lg" style="margin-top:16px">
